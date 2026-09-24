@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Laporan Program & CQI Kursus</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            800: '#0c4a6e',
+                            900: '#0a3751'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-brand-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-brand-700 rounded-lg">
+                    <i class="fa-solid fa-graduation-cap text-2xl text-amber-400"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight">Portal Laporan CQI Mengikut Program</h1>
+                    <p class="text-xs text-slate-300">Continuous Quality Improvement System</p>
+                </div>
+            </div>
+            <button onclick="resetForm()" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 rounded-md transition flex items-center gap-1.5">
+                <i class="fa-solid fa-rotate-right"></i> Set Semula
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow">
+        
+        <form id="programCqiForm" onsubmit="event.preventDefault(); submitToSharePoint();" class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div id="pdfArea" class="p-6 sm:p-10">
+                
+                <!-- Title Header -->
+                <div class="border-b border-slate-200 pb-6 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-wider text-brand-600 mb-1">Peringkat Program & Kursus</div>
+                        <h2 class="text-2xl font-bold text-slate-900">Laporan Pencapaian & CQI Program</h2>
+                    </div>
+                    <div class="text-xs text-slate-500 border-l-2 border-brand-500 pl-3">
+                        Tarikh Hantar: <span id="currentDateDisplay" class="font-semibold text-slate-700"></span>
+                    </div>
+                </div>
+
+                <!-- Layer 1: Program Metadata -->
+                <div class="mb-8 bg-slate-50 p-6 rounded-xl border border-slate-200">
+                    <h3 class="text-md font-bold text-slate-900 mb-4 flex items-center gap-2">
+                        <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-xs">1</span>
+                        Maklumat Program & Penyelaras
+                    </h3>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nama Program *</label>
+                            <input type="text" id="programName" required placeholder="Contoh: BSC MATHEMATICS" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Penyelaras Program *</label>
+                            <input type="text" id="coordinatorName" required placeholder="DR. SARAH" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Sesi Akademik *</label>
+                            <input type="text" id="academicYear" required placeholder="2026/2027" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none uppercase">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Tahun Pengajian Pelajar *</label>
+                            <select id="studentYr" required class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="" disabled selected>-- PILIH TAHUN --</option>
+                                <option value="YEAR 1">YEAR 1 (TAHUN 1)</option>
+                                <option value="YEAR 2">YEAR 2 (TAHUN 2)</option>
+                                <option value="YEAR 3">YEAR 3 (TAHUN 3)</option>
+                                <option value="YEAR 4">YEAR 4 (TAHUN 4)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Layer 2: Semesters & Courses Container -->
+                <div class="space-y-8">
+                    
+                    <!-- Semester 1 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm">
+                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                            <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 1</h4>
+                            <button type="button" onclick="addCourseBlock('sem1Container', 'SEMESTER 1')" class="text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> Tambah Kursus Semester 1
+                            </button>
+                        </div>
+                        <div id="sem1Container" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Semester 2 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm">
+                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                            <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 2</h4>
+                            <button type="button" onclick="addCourseBlock('sem2Container', 'SEMESTER 2')" class="text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> Tambah Kursus Semester 2
+                            </button>
+                        </div>
+                        <div id="sem2Container" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Semester 3 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm">
+                        <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                            <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 3</h4>
+                            <button type="button" onclick="addCourseBlock('sem3Container', 'SEMESTER 3')" class="text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
+                                <i class="fa-solid fa-plus"></i> Tambah Kursus Semester 3
+                            </button>
+                        </div>
+                        <div id="sem3Container" class="space-y-4"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="text-xs text-slate-500">
+                    <i class="fa-solid fa-info-circle text-brand-500"></i> Data dihantar mengikut format Malaysia (DD/MM/YYYY) dan uppercase schema.
+                </div>
+                <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
+                    <button type="button" onclick="generatePDF()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> Muat Turun PDF
+                    </button>
+                    <button type="submit" id="btnSubmit" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Hantar Ke SharePoint
+                    </button>
+                </div>
+            </div>
+        </form>
+    </main>
+
+    <!-- JavaScript Engine -->
+    <script>
+        // PASTE YOUR POWER AUTOMATE HTTP POST URL HERE
+        const powerAutomateUrl = "https://default5a2117b2c0f5465497f87f32b40a1e.10.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/a5a74f40bb5f45a5ac53393d3a786cca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Te-Tn0NWgKIO4JhPCkj5jtZybAc81HhASDS7rV9rN-w";
+
+        let courseCounter = 0;
+
+        // Convert YYYY-MM-DD to DD/MM/YYYY (Malaysian Date Format)
+        function formatDateMY(dateString) {
+            if (!dateString) return "";
+            const parts = dateString.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}/${parts[1]}/${parts[0]}`;
+            }
+            return dateString;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const yyyy = today.getFullYear();
+            const formattedToday = `${dd}/${mm}/${yyyy}`;
+            
+            document.getElementById('currentDateDisplay').innerText = formattedToday;
+
+            // Add default initial course card for each semester
+            addCourseBlock('sem1Container', 'SEMESTER 1');
+            addCourseBlock('sem2Container', 'SEMESTER 2');
+            addCourseBlock('sem3Container', 'SEMESTER 3');
+        });
+
+        function addCourseBlock(containerId, semesterName) {
+            courseCounter++;
+            const container = document.getElementById(containerId);
+            const card = document.createElement('div');
+            card.className = "course-card bg-slate-50 border border-slate-200 rounded-lg p-4 relative text-xs";
+            card.dataset.semester = semesterName;
+
+            card.innerHTML = `
+                <button type="button" onclick="this.parentElement.remove()" class="absolute top-3 right-3 text-slate-400 hover:text-rose-500 transition" title="Padam Kursus">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                    <div class="md:col-span-2">
+                        <label class="block font-semibold text-slate-700 mb-1">Kod & Nama Kursus *</label>
+                        <input type="text" required placeholder="MTH1013 - ALGEBRA" class="kodKursus w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Bilangan Pelajar *</label>
+                        <input type="number" min="1" required placeholder="45" class="bilanganPelajar w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Kadar Lulus (%) *</label>
+                        <input type="number" step="0.1" min="0" max="100" required placeholder="95.0" class="kadarLulus w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Peratus CLO Target (%) *</label>
+                        <input type="number" step="0.1" min="0" max="100" required placeholder="85.0" class="peratusCLO w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Pelajar Berisiko *</label>
+                        <input type="number" min="0" required placeholder="0" class="pelajarBerisiko w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Isu Utama Penilaian/Pembelajaran *</label>
+                        <textarea required rows="2" placeholder="LEMAH ALGEBRA" class="isuUtama w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase"></textarea>
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Tindakan Penambahbaikan (CQI) *</label>
+                        <textarea required rows="2" placeholder="KELAS TUTORIAL" class="tindakanCQI w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase"></textarea>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">PIC *</label>
+                        <input type="text" required placeholder="PENSYARAH" class="pic w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Tarikh Sasaran *</label>
+                        <input type="date" required class="tarikhSasaran w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Status Tindakan *</label>
+                        <select class="statusTindakan w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                            <option value="BELUM BERMULA">BELUM BERMULA</option>
+                            <option value="SEDANG DIJALANKAN">SEDANG DIJALANKAN</option>
+                            <option value="SELESAI">SELESAI</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <label class="block font-semibold text-slate-700 mb-1">Pautan Evidens (Optional)</label>
+                    <input type="url" placeholder="HTTPS://..." class="pautanEvidens w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                </div>
+            `;
+
+            container.appendChild(card);
+        }
+
+        async function submitToSharePoint() {
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghantar...`;
+
+            const programName = document.getElementById('programName').value.toUpperCase();
+            const coordinatorName = document.getElementById('coordinatorName').value.toUpperCase();
+            const academicYear = document.getElementById('academicYear').value.toUpperCase();
+            const studentYr = document.getElementById('studentYr').value.toUpperCase();
+            const tarikhHantar = document.getElementById('currentDateDisplay').innerText;
+
+            const courseCards = document.querySelectorAll('.course-card');
+            const coursesData = [];
+
+            courseCards.forEach(card => {
+                const rawDate = card.querySelector('.tarikhSasaran').value;
+                coursesData.push({
+                    "SEMESTER": card.dataset.semester,
+                    "KODKURSUS": card.querySelector('.kodKursus').value.toUpperCase(),
+                    "BILANGANPELAJAR": parseInt(card.querySelector('.bilanganPelajar').value) || 0,
+                    "KADARLULUS": parseFloat(card.querySelector('.kadarLulus').value) || 0,
+                    "PERATUSCLO": parseFloat(card.querySelector('.peratusCLO').value) || 0,
+                    "PELAJARBERISIKO": parseInt(card.querySelector('.pelajarBerisiko').value) || 0,
+                    "ISUUTAMA": card.querySelector('.isuUtama').value.toUpperCase(),
+                    "TINDAKANCQI": card.querySelector('.tindakanCQI').value.toUpperCase(),
+                    "PIC": card.querySelector('.pic').value.toUpperCase(),
+                    "TARIKHSASARAN": formatDateMY(rawDate),
+                    "STATUSTINDAKAN": card.querySelector('.statusTindakan').value,
+                    "PAUTANEVIDENS": card.querySelector('.pautanEvidens').value
+                });
+            });
+
+            // Exact JSON payload matching your uppercase schema
+            const payload = {
+                "PROGRAM": programName,
+                "COORDINATOR": coordinatorName,
+                "ACADEMICYEAR": academicYear,
+                "STUDENTYR": studentYr,
+                "TARIKHHANTAR": tarikhHantar,
+                "COURSES": coursesData
+            };
+
+            try {
+                const response = await fetch(powerAutomateUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert('Laporan program berjaya disimpan ke SharePoint Excel!');
+                } else {
+                    alert('Gagal menyimpan data ke SharePoint.');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Ralat Rangkaian: Sila semak sambungan Internet.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Hantar Ke SharePoint`;
+            }
+        }
+
+        function generatePDF() {
+            const element = document.getElementById('pdfArea');
+            html2pdf().set({
+                margin: [0.3, 0.3, 0.3, 0.3],
+                filename: `Laporan_Program_CQI.pdf`,
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+            }).from(element).save();
+        }
+
+        function resetForm() {
+            if (confirm('Kosongkan semua isian?')) {
+                document.getElementById('programCqiForm').reset();
+            }
+        }
+    </script>
+</body>
+</html>
