@@ -32,34 +32,21 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
 
-        /* PDF & Print Formatting Enhancements */
         .pdf-page-break {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
         }
 
-        #pdfArea {
-            box-sizing: border-box !important;
-            margin: 0 auto !important;
-        }
-
-        /* Standardize input appearances during PDF generation */
-        .rendering-pdf input, 
-        .rendering-pdf select, 
-        .rendering-pdf textarea {
-            border-color: #cbd5e1 !important;
-            background-color: #ffffff !important;
-            font-size: 11px !important;
-            padding: 4px 6px !important;
+        /* Fixed container size for HTML-to-Canvas transformation */
+        .pdf-export-mode {
+            width: 750px !important;
+            max-width: 750px !important;
+            padding: 20px !important;
+            background: #ffffff !important;
         }
 
         @media print {
             .no-print { display: none !important; }
-            textarea, input, select {
-                border: none !important;
-                background: transparent !important;
-                resize: none !important;
-            }
         }
     </style>
 </head>
@@ -411,14 +398,36 @@
             }
         }
 
-        // Optimized PDF capture without width clipping or margin shift
+        // Off-screen Clone Rendering for Perfectly Aligned A4 Exports
         function generatePDF() {
-            const element = document.getElementById('pdfArea');
+            const originalElement = document.getElementById('pdfArea');
             const programNameInput = document.getElementById('programName').value.trim();
             const programCode = programNameInput.replace(/[^a-zA-Z0-9]/g, '_') || 'PROGRAM';
 
-            // Temporarily apply layout class for clean canvas rendering
-            element.classList.add('rendering-pdf');
+            // 1. Deep clone the form node so current input values are captured
+            const clonedContainer = document.createElement('div');
+            clonedContainer.style.position = 'absolute';
+            clonedContainer.style.left = '-9999px';
+            clonedContainer.style.top = '0';
+            
+            const clonedElement = originalElement.cloneNode(true);
+            clonedElement.classList.add('pdf-export-mode');
+
+            // Sync form input/select values to clone manually (cloneNode doesn't copy active input states)
+            const origInputs = originalElement.querySelectorAll('input, select, textarea');
+            const clonedInputs = clonedElement.querySelectorAll('input, select, textarea');
+
+            origInputs.forEach((input, index) => {
+                if (clonedInputs[index]) {
+                    clonedInputs[index].value = input.value;
+                }
+            });
+
+            // Strip interactive dynamic buttons from export clone
+            clonedElement.querySelectorAll('.no-print').forEach(el => el.remove());
+
+            clonedContainer.appendChild(clonedElement);
+            document.body.appendChild(clonedContainer);
 
             const opt = {
                 margin:       [0.3, 0.3, 0.3, 0.3],
@@ -430,14 +439,14 @@
                     logging: false,
                     scrollX: 0,
                     scrollY: 0,
-                    windowWidth: 1024
+                    windowWidth: 750
                 },
                 jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
                 pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
             };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                element.classList.remove('rendering-pdf');
+            html2pdf().set(opt).from(clonedElement).save().then(() => {
+                document.body.removeChild(clonedContainer);
             });
         }
 
