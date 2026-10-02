@@ -369,15 +369,20 @@
             }
         }
 
-        // SEMAK ISU UTAMA & TIK AUTO "NO DATE"
+        // SEMAK ISU UTAMA & TIK AUTO "NO DATE" JIKA KOSONG / TIADA
         function handleIsuUtamaChange(textarea) {
             const card = textarea.closest('.course-card');
             const noDateCheck = card.querySelector('.noDateCheck');
             const textVal = textarea.value.trim().toUpperCase();
 
-            if (textVal === "TIADA" || textVal === "NONE" || textVal === "N/A" || textVal === "NA") {
+            if (textVal === "" || textVal === "TIADA" || textVal === "NONE" || textVal === "N/A" || textVal === "NA") {
                 if (!noDateCheck.checked) {
                     noDateCheck.checked = true;
+                    toggleNoDateState(noDateCheck);
+                }
+            } else {
+                if (noDateCheck.checked) {
+                    noDateCheck.checked = false;
                     toggleNoDateState(noDateCheck);
                 }
             }
@@ -527,11 +532,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Isu Utama / Key Issues *</label>
-                        <textarea required rows="2" placeholder="ISU UTAMA" oninput="handleIsuUtamaChange(this)" class="isuUtama w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase">TIADA</textarea>
+                        <textarea required rows="2" placeholder="TIADA" oninput="handleIsuUtamaChange(this)" class="isuUtama w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase"></textarea>
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Tindakan Penambahbaikan / CQI Actions *</label>
-                        <textarea required rows="2" placeholder="TINDAKAN CQI" class="tindakanCQI w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase">TIADA</textarea>
+                        <textarea required rows="2" placeholder="TIADA" class="tindakanCQI w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase"></textarea>
                     </div>
                 </div>
 
@@ -628,6 +633,8 @@
                 const passVal = card.querySelector('.kadarLulus').value;
                 const cloVal = card.querySelector('.peratusCLOInput').value;
                 const riskVal = card.querySelector('.pelajarBerisiko').value;
+                const isuTxt = card.querySelector('.isuUtama').value.trim();
+                const cqiTxt = card.querySelector('.tindakanCQI').value.trim();
 
                 coursesData.push({
                     "PROGRAMKOD": programKod,
@@ -643,8 +650,8 @@
                     "KADARLULUS": passVal === "NA" ? "NA" : (parseFloat(passVal) || 0),
                     "PERATUSCLO": cloVal === "NA" ? "NA" : (parseFloat(cloVal) || 0),
                     "PELAJARBERISIKO": riskVal === "NA" ? "NA" : (parseInt(riskVal) || 0),
-                    "ISUUTAMA": card.querySelector('.isuUtama').value.toUpperCase(),
-                    "TINDAKANCQI": card.querySelector('.tindakanCQI').value.toUpperCase(),
+                    "ISUUTAMA": isuTxt === "" ? "TIADA" : isuTxt.toUpperCase(),
+                    "TINDAKANCQI": cqiTxt === "" ? "TIADA" : cqiTxt.toUpperCase(),
                     "PIC": card.querySelector('.pic').value,
                     "TARIKHSASARAN": formatDateMY(rawDate),
                     "STATUSTINDAKAN": card.querySelector('.statusTindakan').value,
