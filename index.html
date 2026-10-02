@@ -456,7 +456,15 @@
             addCourseBlock('sem2Container', 'SEMESTER 2');
             addCourseBlock('sem3Container', 'SEMESTER 3');
 
-            switchRole('COORDINATOR');
+            // Pengesanan Automatik Peranan Melalui URL Parameter (?role=DEAN)
+            const urlParams = new URLSearchParams(window.location.search);
+            const roleParam = urlParams.get('role');
+
+            if (roleParam === 'DEAN') {
+                switchRole('DEAN');
+            } else {
+                switchRole('COORDINATOR');
+            }
         });
 
         function addCourseBlock(containerId, semesterName) {
@@ -594,12 +602,35 @@
             }
 
             const coordName = document.getElementById('penyelarasProgram').value;
+            const programKod = document.getElementById('programKod').value;
+            const namaProgram = document.getElementById('namaProgram').value;
             const tarikhHantar = document.getElementById('currentDateDisplay').innerText;
             
             document.getElementById('sigCoordName').innerText = coordName || '_______________________';
             document.getElementById('sigCoordDate').innerText = tarikhHantar;
 
-            alert('Peringkat 1 Selesai! Borang bersedia untuk disemak dan diluluskan oleh Dekan / Ketua Jabatan.');
+            // Sediakan Pautan Khas Dekan (Stage 2 Review Link)
+            const deanReviewUrl = `${window.location.origin}${window.location.pathname}?role=DEAN&programCode=${encodeURIComponent(programKod)}`;
+
+            // Sediakan Draf E-mel Automatik
+            const subject = encodeURIComponent(`[SEMACAN CQI] Laporan CQI Program ${programKod} - ${namaProgram}`);
+            const body = encodeURIComponent(
+                `Assalamualaikum / Salam Sejahtera YBhg. Prof./Dr.,\n\n` +
+                `Laporan CQI Program bagi ${namaProgram} (${programKod}) telah selesai diisi oleh Penyelaras Program.\n\n` +
+                `Sila klik pautan di bawah untuk membuat semakan dan kelulusan:\n` +
+                `${deanReviewUrl}\n\n` +
+                `Sekian, terima kasih.\n${coordName}`
+            );
+
+            const confirmEmail = confirm(
+                'Peringkat 1 Selesai!\n\n' +
+                'Adakah anda ingin membuka perisian e-mel untuk memajukan pautan notifikasi kelulusan secara terus kepada Dekan/KJ?'
+            );
+
+            if (confirmEmail) {
+                window.location.href = `mailto:?subject=${subject}&body=${body}`;
+            }
+
             switchRole('DEAN');
         }
 
