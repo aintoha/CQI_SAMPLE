@@ -386,20 +386,18 @@
         function calculateMetrics(card) {
             const totalStudentsInput = card.querySelector('.bilanganPelajar');
             const passedStudentsInput = card.querySelector('.bilanganLulus');
-            const cloStudentsInput = card.querySelector('.bilanganCLO');
+            const cloInput = card.querySelector('.peratusCLOInput');
             
             const passRateInput = card.querySelector('.kadarLulus');
             const cloRateInput = card.querySelector('.peratusCLO');
             const atRiskInput = card.querySelector('.pelajarBerisiko');
 
             const naPass = card.querySelector('.naPassCheck').checked;
-            const naCloCount = card.querySelector('.naCloAchievedCheck').checked;
             const naCloPct = card.querySelector('.naCloCheck').checked;
             const naRisk = card.querySelector('.naRiskCheck').checked;
 
             const total = parseInt(totalStudentsInput.value) || 0;
             let passed = parseInt(passedStudentsInput.value) || 0;
-            let cloPassed = parseInt(cloStudentsInput.value) || 0;
 
             if (total > 0 && passed > total) {
                 alert('Bilangan Pelajar Lulus tidak boleh melebihi Jumlah Bilangan Pelajar!');
@@ -407,10 +405,17 @@
                 passed = total;
             }
 
-            if (!naCloCount && total > 0 && cloPassed > total) {
-                alert('Bilangan Pelajar Mencapai CLO tidak boleh melebihi Jumlah Bilangan Pelajar!');
-                cloStudentsInput.value = total;
-                cloPassed = total;
+            // Semakan Peratus CLO Input Manual
+            if (!naCloPct) {
+                let cloVal = parseFloat(cloInput.value);
+                if (cloVal > 100) {
+                    alert('Peratus CLO tidak boleh melebihi 100%!');
+                    cloInput.value = 100;
+                    cloVal = 100;
+                }
+                cloRateInput.value = isNaN(cloVal) ? '' : cloVal.toFixed(1);
+            } else {
+                cloRateInput.value = "NA";
             }
 
             if (naPass) {
@@ -419,14 +424,6 @@
                 passRateInput.value = ((passed / total) * 100).toFixed(1);
             } else {
                 passRateInput.value = '';
-            }
-
-            if (naCloPct || naCloCount) {
-                cloRateInput.value = "NA";
-            } else if (total > 0) {
-                cloRateInput.value = ((cloPassed / total) * 100).toFixed(1);
-            } else {
-                cloRateInput.value = '';
             }
 
             if (naRisk) {
@@ -491,12 +488,12 @@
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
-                            <label class="font-semibold text-slate-700">Bil. Mencapai CLO / CLO Achieved *</label>
+                            <label class="font-semibold text-slate-700">Peratus CLO / CLO Percentage (%) *</label>
                             <label class="inline-flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer no-print">
-                                <input type="checkbox" class="naCloAchievedCheck rounded text-brand-600 focus:ring-brand-500" onchange="toggleNaState(this, 'bilanganCLO')"> NA
+                                <input type="checkbox" class="naCloCheck rounded text-brand-600 focus:ring-brand-500" onchange="toggleNaState(this, 'peratusCLOInput')"> NA
                             </label>
                         </div>
-                        <input type="text" required placeholder="40" oninput="calculateMetrics(this.closest('.course-card'))" class="bilanganCLO w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                        <input type="number" step="0.1" min="0" max="100" required placeholder="85.0" oninput="calculateMetrics(this.closest('.course-card'))" class="peratusCLOInput w-full bg-white border border-slate-300 rounded p-2 outline-none">
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
@@ -522,11 +519,8 @@
                     <div>
                         <div class="flex justify-between items-center mb-1">
                             <label class="font-semibold text-slate-700">Peratus CLO Target (%) [0-100] *</label>
-                            <label class="inline-flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer no-print">
-                                <input type="checkbox" class="naCloCheck rounded text-brand-600 focus:ring-brand-500" onchange="toggleNaState(this, 'peratusCLO')"> NA
-                            </label>
                         </div>
-                        <input type="text" placeholder="0.0" class="peratusCLO w-full bg-slate-100 border border-slate-300 rounded p-2 outline-none font-semibold text-slate-700">
+                        <input type="text" placeholder="0.0" readonly class="peratusCLO w-full bg-slate-100 border border-slate-300 rounded p-2 outline-none font-semibold text-slate-700">
                     </div>
                 </div>
 
@@ -583,7 +577,6 @@
 
             container.appendChild(card);
 
-            // Auto-check No Date jika Isu Utama secara lalai adalah "TIADA"
             const isuArea = card.querySelector('.isuUtama');
             handleIsuUtamaChange(isuArea);
         }
@@ -633,9 +626,8 @@
             courseCards.forEach(card => {
                 const rawDate = card.querySelector('.tarikhSasaran').value;
                 const passVal = card.querySelector('.kadarLulus').value;
-                const cloVal = card.querySelector('.peratusCLO').value;
+                const cloVal = card.querySelector('.peratusCLOInput').value;
                 const riskVal = card.querySelector('.pelajarBerisiko').value;
-                const cloAchievedVal = card.querySelector('.bilanganCLO').value;
 
                 coursesData.push({
                     "PROGRAMKOD": programKod,
@@ -648,7 +640,6 @@
                     "NAMAKURSUS": card.querySelector('.namaKursus').value.toUpperCase(),
                     "BILANGANPELAJAR": parseInt(card.querySelector('.bilanganPelajar').value) || 0,
                     "BILANGANLULUS": parseInt(card.querySelector('.bilanganLulus').value) || 0,
-                    "BILANGANCLO": cloAchievedVal === "NA" ? "NA" : (parseInt(cloAchievedVal) || 0),
                     "KADARLULUS": passVal === "NA" ? "NA" : (parseFloat(passVal) || 0),
                     "PERATUSCLO": cloVal === "NA" ? "NA" : (parseFloat(cloVal) || 0),
                     "PELAJARBERISIKO": riskVal === "NA" ? "NA" : (parseInt(riskVal) || 0),
