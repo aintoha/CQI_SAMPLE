@@ -201,7 +201,7 @@
                 <!-- Layer 2: Semesters & Courses Container -->
                 <div class="space-y-8">
                     
-                    <!-- Semester 1 -->
+                    <!-- Semester 1 (Wajib) -->
                     <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm pdf-page-break">
                         <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
                             <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 1 / SEMESTER 1</h4>
@@ -212,7 +212,7 @@
                         <div id="sem1Container" class="space-y-4"></div>
                     </div>
 
-                    <!-- Semester 2 -->
+                    <!-- Semester 2 (Wajib) -->
                     <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm pdf-page-break">
                         <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
                             <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 2 / SEMESTER 2</h4>
@@ -223,10 +223,13 @@
                         <div id="sem2Container" class="space-y-4"></div>
                     </div>
 
-                    <!-- Semester 3 -->
+                    <!-- Semester 3 (Opsional / Optional) -->
                     <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm pdf-page-break">
                         <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
-                            <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 3 / SEMESTER 3</h4>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 3 / SEMESTER 3</h4>
+                                <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-300 uppercase font-medium">(Opsional / Optional)</span>
+                            </div>
                             <button type="button" id="btnAddSem3" onclick="addCourseBlock('sem3Container', 'SEMESTER 3')" class="no-print text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> Tambah Kursus / Add Course (Sem 3)
                             </button>
@@ -475,9 +478,9 @@
             
             document.getElementById('currentDateDisplay').innerText = formattedToday;
 
+            // Semester 1 & 2 sahaja dijana secara lalai. Semester 3 ditinggalkan opsional.
             addCourseBlock('sem1Container', 'SEMESTER 1');
             addCourseBlock('sem2Container', 'SEMESTER 2');
-            addCourseBlock('sem3Container', 'SEMESTER 3');
 
             const urlParams = new URLSearchParams(window.location.search);
             const roleParam = urlParams.get('role');
@@ -616,7 +619,7 @@
             handleIsuUtamaChange(isuArea);
         }
 
-        // PERINGKAT 1 SUBMISSION: HANTAR DATA KE POWER AUTOMATE + BUKA MAILTO
+        // PERINGKAT 1 SUBMISSION & EMEL NOTIFIKASI KEPADA DEKAN
         async function handleFormSubmission() {
             if (!document.getElementById('checkCoordinator').checked) {
                 alert('Sila tandakan kotak pengesahan Penyelaras Program terlebih dahulu!');
@@ -681,7 +684,6 @@
             const payload = { "COURSES": coursesData };
 
             try {
-                // 1. Hantar data ke Power Automate supaya Power Automate boleh hantar emel latar belakang
                 await fetch(powerAutomateUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -694,7 +696,6 @@
                 btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Hantar Untuk Semakan Dekan (Stage 1)`;
             }
 
-            // 2. Buka aplikasi emel peribadi secara automatik (Mailto link)
             const deanReviewUrl = `${window.location.origin}${window.location.pathname}?role=DEAN&programCode=${encodeURIComponent(programKod)}`;
             const subject = encodeURIComponent(`[MEMERLUKAN KELULUSAN] Laporan CQI Program ${programKod} - ${namaProgram}`);
             const body = encodeURIComponent(
