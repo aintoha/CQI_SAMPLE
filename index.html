@@ -290,6 +290,7 @@
 
         function formatDateMY(dateString) {
             if (!dateString) return "";
+            if (dateString === "NA" || dateString.includes("NO DATE")) return dateString;
             const parts = dateString.split('-');
             if (parts.length === 3) {
                 return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -346,6 +347,42 @@
             calculateMetrics(card);
         }
 
+        // TOGGLE DATES NA / NO DATE
+        function toggleNoDateState(checkbox) {
+            const card = checkbox.closest('.course-card');
+            const targetInput = card.querySelector('.tarikhSasaran');
+
+            if (checkbox.checked) {
+                targetInput.dataset.oldType = targetInput.type;
+                targetInput.dataset.oldValue = targetInput.value;
+                targetInput.type = "text";
+                targetInput.value = "NA";
+                targetInput.disabled = true;
+                targetInput.removeAttribute('required');
+                targetInput.classList.add('bg-slate-200', 'text-slate-500');
+            } else {
+                targetInput.type = "date";
+                targetInput.value = targetInput.dataset.oldValue || "";
+                targetInput.disabled = false;
+                targetInput.setAttribute('required', 'required');
+                targetInput.classList.remove('bg-slate-200', 'text-slate-500');
+            }
+        }
+
+        // SEMAK ISU UTAMA & TIK AUTO "NO DATE"
+        function handleIsuUtamaChange(textarea) {
+            const card = textarea.closest('.course-card');
+            const noDateCheck = card.querySelector('.noDateCheck');
+            const textVal = textarea.value.trim().toUpperCase();
+
+            if (textVal === "TIADA" || textVal === "NONE" || textVal === "N/A" || textVal === "NA") {
+                if (!noDateCheck.checked) {
+                    noDateCheck.checked = true;
+                    toggleNoDateState(noDateCheck);
+                }
+            }
+        }
+
         function calculateMetrics(card) {
             const totalStudentsInput = card.querySelector('.bilanganPelajar');
             const passedStudentsInput = card.querySelector('.bilanganLulus');
@@ -356,7 +393,8 @@
             const atRiskInput = card.querySelector('.pelajarBerisiko');
 
             const naPass = card.querySelector('.naPassCheck').checked;
-            const naClo = card.querySelector('.naCloCheck').checked;
+            const naCloCount = card.querySelector('.naCloAchievedCheck').checked;
+            const naCloPct = card.querySelector('.naCloCheck').checked;
             const naRisk = card.querySelector('.naRiskCheck').checked;
 
             const total = parseInt(totalStudentsInput.value) || 0;
@@ -369,7 +407,7 @@
                 passed = total;
             }
 
-            if (total > 0 && cloPassed > total) {
+            if (!naCloCount && total > 0 && cloPassed > total) {
                 alert('Bilangan Pelajar Mencapai CLO tidak boleh melebihi Jumlah Bilangan Pelajar!');
                 cloStudentsInput.value = total;
                 cloPassed = total;
@@ -383,7 +421,7 @@
                 passRateInput.value = '';
             }
 
-            if (naClo) {
+            if (naCloPct || naCloCount) {
                 cloRateInput.value = "NA";
             } else if (total > 0) {
                 cloRateInput.value = ((cloPassed / total) * 100).toFixed(1);
@@ -452,8 +490,13 @@
                         <input type="number" min="0" required placeholder="43" oninput="calculateMetrics(this.closest('.course-card'))" class="bilanganLulus w-full bg-white border border-slate-300 rounded p-2 outline-none">
                     </div>
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Bil. Mencapai CLO / CLO Achieved *</label>
-                        <input type="number" min="0" required placeholder="40" oninput="calculateMetrics(this.closest('.course-card'))" class="bilanganCLO w-full bg-white border border-slate-300 rounded p-2 outline-none">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-slate-700">Bil. Mencapai CLO / CLO Achieved *</label>
+                            <label class="inline-flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer no-print">
+                                <input type="checkbox" class="naCloAchievedCheck rounded text-brand-600 focus:ring-brand-500" onchange="toggleNaState(this, 'bilanganCLO')"> NA
+                            </label>
+                        </div>
+                        <input type="text" required placeholder="40" oninput="calculateMetrics(this.closest('.course-card'))" class="bilanganCLO w-full bg-white border border-slate-300 rounded p-2 outline-none">
                     </div>
                     <div>
                         <div class="flex justify-between items-center mb-1">
@@ -490,7 +533,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Isu Utama / Key Issues *</label>
-                        <textarea required rows="2" placeholder="ISU UTAMA" class="isuUtama w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase">TIADA</textarea>
+                        <textarea required rows="2" placeholder="ISU UTAMA" oninput="handleIsuUtamaChange(this)" class="isuUtama w-full bg-white border border-slate-300 rounded p-2 outline-none uppercase">TIADA</textarea>
                     </div>
                     <div>
                         <label class="block font-semibold text-slate-700 mb-1">Tindakan Penambahbaikan / CQI Actions *</label>
@@ -512,7 +555,12 @@
                     </div>
                     
                     <div>
-                        <label class="block font-semibold text-slate-700 mb-1">Tarikh Sasaran / Target Date *</label>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="font-semibold text-slate-700">Tarikh Sasaran / Target Date *</label>
+                            <label class="inline-flex items-center gap-1 text-[10px] text-slate-500 cursor-pointer no-print">
+                                <input type="checkbox" class="noDateCheck rounded text-brand-600 focus:ring-brand-500" onchange="toggleNoDateState(this)"> Tiada Tarikh / No Date
+                            </label>
+                        </div>
                         <input type="date" min="${todayIsoString}" required class="tarikhSasaran w-full bg-white border border-slate-300 rounded p-2 outline-none">
                     </div>
 
@@ -534,6 +582,10 @@
             `;
 
             container.appendChild(card);
+
+            // Auto-check No Date jika Isu Utama secara lalai adalah "TIADA"
+            const isuArea = card.querySelector('.isuUtama');
+            handleIsuUtamaChange(isuArea);
         }
 
         // PERINGKAT 1 SUBMISSION: Penyelaras Program
@@ -583,6 +635,7 @@
                 const passVal = card.querySelector('.kadarLulus').value;
                 const cloVal = card.querySelector('.peratusCLO').value;
                 const riskVal = card.querySelector('.pelajarBerisiko').value;
+                const cloAchievedVal = card.querySelector('.bilanganCLO').value;
 
                 coursesData.push({
                     "PROGRAMKOD": programKod,
@@ -595,7 +648,7 @@
                     "NAMAKURSUS": card.querySelector('.namaKursus').value.toUpperCase(),
                     "BILANGANPELAJAR": parseInt(card.querySelector('.bilanganPelajar').value) || 0,
                     "BILANGANLULUS": parseInt(card.querySelector('.bilanganLulus').value) || 0,
-                    "BILANGANCLO": parseInt(card.querySelector('.bilanganCLO').value) || 0,
+                    "BILANGANCLO": cloAchievedVal === "NA" ? "NA" : (parseInt(cloAchievedVal) || 0),
                     "KADARLULUS": passVal === "NA" ? "NA" : (parseFloat(passVal) || 0),
                     "PERATUSCLO": cloVal === "NA" ? "NA" : (parseFloat(cloVal) || 0),
                     "PELAJARBERISIKO": riskVal === "NA" ? "NA" : (parseInt(riskVal) || 0),
