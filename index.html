@@ -35,7 +35,7 @@
                 background-color: #ffffff !important; 
                 color: #000000 !important;
             }
-            .no-print, header, button { 
+            .no-print, header, button, .workflow-banner { 
                 display: none !important; 
             }
             main { 
@@ -71,26 +71,54 @@
 
     <!-- Header -->
     <header class="bg-brand-900 text-white shadow-md sticky top-0 z-50 no-print">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
             <div class="flex items-center space-x-3">
                 <div class="p-2 bg-brand-700 rounded-lg">
                     <i class="fa-solid fa-graduation-cap text-2xl text-amber-400"></i>
                 </div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">Portal Laporan CQI Mengikut Program / Program CQI Report Portal</h1>
-                    <p class="text-xs text-slate-300">Sistem Penambahbaikan Kualiti Berterusan / Continuous Quality Improvement System</p>
+                    <h1 class="font-bold text-lg leading-tight">Portal Laporan CQI Mengikut Program</h1>
+                    <p class="text-xs text-slate-300">Sistem Workflow Approval 2 Peringkat (Penyelaras & Dekan)</p>
                 </div>
             </div>
-            <button onclick="resetForm()" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 rounded-md transition flex items-center gap-1.5">
-                <i class="fa-solid fa-rotate-right"></i> Set Semula / Reset
-            </button>
+            
+            <div class="flex items-center gap-3">
+                <!-- Role / Stage Switcher for Testing -->
+                <div class="bg-brand-800 p-1.5 rounded-lg flex items-center border border-brand-700 text-xs">
+                    <span class="text-slate-300 px-2 font-medium">Mod Pengguna:</span>
+                    <button type="button" onclick="switchRole('COORDINATOR')" id="btnRoleCoord" class="px-2.5 py-1 rounded bg-brand-600 text-white font-bold transition">
+                        1. Penyelaras
+                    </button>
+                    <button type="button" onclick="switchRole('DEAN')" id="btnRoleDean" class="px-2.5 py-1 rounded text-slate-300 hover:text-white transition">
+                        2. Dekan / KJ
+                    </button>
+                </div>
+
+                <button onclick="resetForm()" class="px-3 py-1.5 text-xs bg-slate-700 hover:bg-slate-600 rounded-md transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i> Set Semula
+                </button>
+            </div>
         </div>
     </header>
 
+    <!-- Workflow Stage Indicator Banner -->
+    <div class="workflow-banner bg-amber-50 border-b border-amber-200 px-4 py-2.5 no-print">
+        <div class="max-w-6xl mx-auto flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2 text-amber-800 font-semibold" id="stageBannerText">
+                <i class="fa-solid fa-circle-info text-amber-600"></i>
+                <span>PERINGKAT 1: Isian Borang Oleh Penyelaras Program</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="badgeStage1" class="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 font-bold">1. DRAFT / PENDING DEAN</span>
+                <span id="badgeStage2" class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-bold">2. DEAN APPROVED</span>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Container -->
-    <main class="max-w-6xl mx-auto px-4 py-8 w-full flex-grow">
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-grow">
         
-        <form id="programCqiForm" onsubmit="event.preventDefault(); submitToSharePoint();" class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+        <form id="programCqiForm" onsubmit="event.preventDefault(); handleFormSubmission();" class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
             
             <!-- Printable Area -->
             <div id="pdfArea" class="p-6 sm:p-10 bg-white">
@@ -150,7 +178,7 @@
                     <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm pdf-page-break">
                         <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
                             <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 1 / SEMESTER 1</h4>
-                            <button type="button" onclick="addCourseBlock('sem1Container', 'SEMESTER 1')" class="no-print text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
+                            <button type="button" id="btnAddSem1" onclick="addCourseBlock('sem1Container', 'SEMESTER 1')" class="no-print text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> Tambah Kursus / Add Course (Sem 1)
                             </button>
                         </div>
@@ -161,7 +189,7 @@
                     <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm pdf-page-break">
                         <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
                             <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 2 / SEMESTER 2</h4>
-                            <button type="button" onclick="addCourseBlock('sem2Container', 'SEMESTER 2')" class="no-print text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
+                            <button type="button" id="btnAddSem2" onclick="addCourseBlock('sem2Container', 'SEMESTER 2')" class="no-print text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> Tambah Kursus / Add Course (Sem 2)
                             </button>
                         </div>
@@ -172,7 +200,7 @@
                     <div class="border border-slate-200 rounded-xl p-5 bg-white shadow-sm pdf-page-break">
                         <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
                             <h4 class="font-bold text-slate-800 text-base text-brand-700">SEMESTER 3 / SEMESTER 3</h4>
-                            <button type="button" onclick="addCourseBlock('sem3Container', 'SEMESTER 3')" class="no-print text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
+                            <button type="button" id="btnAddSem3" onclick="addCourseBlock('sem3Container', 'SEMESTER 3')" class="no-print text-xs bg-brand-50 text-brand-700 font-semibold px-3 py-1.5 rounded-lg border border-brand-200 hover:bg-brand-100 transition flex items-center gap-1">
                                 <i class="fa-solid fa-plus"></i> Tambah Kursus / Add Course (Sem 3)
                             </button>
                         </div>
@@ -181,19 +209,48 @@
 
                 </div>
 
+                <!-- Verification & Approval Tick Boxes Section -->
+                <div class="mt-8 border border-slate-200 rounded-xl p-6 bg-slate-50 space-y-6 pdf-page-break">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-brand-600"></i> Pengesahan & Semakan Dua Peringkat (Two-Stage Verification)
+                    </h3>
+
+                    <!-- Stage 1 Tick Box: Program Coordinator -->
+                    <div class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" id="checkCoordinator" required class="mt-1 w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                            <div>
+                                <span class="font-bold text-xs text-slate-800 uppercase block">1. Pengesahan Penyelaras Program (Program Coordinator Verification) *</span>
+                                <span class="text-xs text-slate-600">Saya mengesahkan bahawa semua maklumat pencapaian kursus dan tindakan CQI di atas telah disemak bersama pensyarah kursus dan adalah tepat.</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Stage 2 Tick Box: Dean / Head of Department -->
+                    <div id="deanApprovalSection" class="bg-amber-50/60 p-4 rounded-lg border border-amber-200 shadow-sm">
+                        <label class="flex items-start gap-3 cursor-pointer">
+                            <input type="checkbox" id="checkDean" class="mt-1 w-4 h-4 text-brand-600 rounded focus:ring-brand-500">
+                            <div>
+                                <span class="font-bold text-xs text-amber-900 uppercase block">2. Kelulusan Dekan / Ketua Jabatan (Dean / Head of Department Approval) *</span>
+                                <span class="text-xs text-slate-600">Saya telah menyemak laporan CQI program ini dan bersetuju untuk meluluskan perancangan CQI yang dikemukakan untuk tindakan seterusnya.</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Signatures Block -->
                 <div class="pt-8 mt-8 border-t border-slate-200 grid grid-cols-2 gap-8 pdf-page-break">
                     <div class="text-xs">
                         <p class="font-bold text-slate-700 mb-10">Disediakan Oleh / Prepared By (Penyelaras Program):</p>
                         <div class="border-b border-slate-400 w-48 mb-2"></div>
-                        <p class="font-medium text-slate-800">Nama / Name: _______________________</p>
-                        <p class="text-slate-500">Tarikh / Date: ______________________</p>
+                        <p class="font-medium text-slate-800">Nama / Name: <span id="sigCoordName">_______________________</span></p>
+                        <p class="text-slate-500">Tarikh / Date: <span id="sigCoordDate">______________________</span></p>
                     </div>
                     <div class="text-xs">
-                        <p class="font-bold text-slate-700 mb-10">Disahkan Oleh / Approved By (Ketua Jabatan):</p>
+                        <p class="font-bold text-slate-700 mb-10">Disahkan Oleh / Approved By (Ketua Jabatan / Dekan):</p>
                         <div class="border-b border-slate-400 w-48 mb-2"></div>
-                        <p class="font-medium text-slate-800">Nama / Name: _______________________</p>
-                        <p class="text-slate-500">Tarikh / Date: ______________________</p>
+                        <p class="font-medium text-slate-800">Nama / Name: <span id="sigDeanName">_______________________</span></p>
+                        <p class="text-slate-500">Tarikh / Date: <span id="sigDeanDate">______________________</span></p>
                     </div>
                 </div>
 
@@ -202,14 +259,21 @@
             <!-- Footer Toolbar -->
             <div class="no-print bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <div class="text-xs text-slate-500">
-                    <i class="fa-solid fa-info-circle text-brand-500"></i> Klik "Cetak / Simpan PDF" untuk salinan rasmi / Click "Print / Save PDF" for official PDF copy.
+                    <i class="fa-solid fa-info-circle text-brand-500"></i> Sila pastikan kotak semakan ditanda mengikut peranan sebelum penghantaran.
                 </div>
                 <div class="flex items-center space-x-3 w-full sm:w-auto justify-end">
                     <button type="button" onclick="generatePDF()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-file-pdf"></i> Cetak / Simpan PDF (Print PDF)
+                        <i class="fa-solid fa-file-pdf"></i> Cetak / Simpan PDF
                     </button>
-                    <button type="submit" id="btnSubmit" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-paper-plane"></i> Hantar Ke SharePoint / Submit
+                    
+                    <!-- Submit Button Stage 1 -->
+                    <button type="submit" id="btnSubmitStage1" class="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane"></i> Hantar Untuk Semakan Dekan (Stage 1)
+                    </button>
+
+                    <!-- Submit Button Stage 2 (Dean Final Approval) -->
+                    <button type="button" id="btnSubmitStage2" onclick="submitFinalApproval()" class="hidden px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-circle-check"></i> Kelulusan Dekan & Hantar Ke SharePoint
                     </button>
                 </div>
             </div>
@@ -220,6 +284,7 @@
     <script>
         const powerAutomateUrl = "https://default5a2117b2c0f5465497f87f32b40a1e.10.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/00/workflows/a5a74f40bb5f45a5ac53393d3a786cca/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Te-Tn0NWgKIO4JhPCkj5jtZybAc81HhASDS7rV9rN-w";
 
+        let currentRole = "COORDINATOR"; // Default Stage 1
         let courseCounter = 0;
         let todayIsoString = "";
 
@@ -232,7 +297,36 @@
             return dateString;
         }
 
-        // FUNGSI UNTUK MENGOLEH SIFAT/INPUT NA (NOT APPLICABLE)
+        // TUKAR PERANAN / MOD WORKFLOW
+        function switchRole(role) {
+            currentRole = role;
+            const btnCoord = document.getElementById('btnRoleCoord');
+            const btnDean = document.getElementById('btnRoleDean');
+            const stageBannerText = document.getElementById('stageBannerText');
+            const btnSubmit1 = document.getElementById('btnSubmitStage1');
+            const btnSubmit2 = document.getElementById('btnSubmitStage2');
+            const checkDean = document.getElementById('checkDean');
+            const checkCoordinator = document.getElementById('checkCoordinator');
+
+            if (role === 'COORDINATOR') {
+                btnCoord.className = "px-2.5 py-1 rounded bg-brand-600 text-white font-bold transition";
+                btnDean.className = "px-2.5 py-1 rounded text-slate-300 hover:text-white transition";
+                stageBannerText.innerHTML = `<i class="fa-solid fa-circle-info text-amber-600"></i> PERINGKAT 1: Isian Borang Oleh Penyelaras Program`;
+                btnSubmit1.classList.remove('hidden');
+                btnSubmit2.classList.add('hidden');
+                checkDean.disabled = true;
+                checkCoordinator.disabled = false;
+            } else {
+                btnDean.className = "px-2.5 py-1 rounded bg-emerald-600 text-white font-bold transition";
+                btnCoord.className = "px-2.5 py-1 rounded text-slate-300 hover:text-white transition";
+                stageBannerText.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-600"></i> PERINGKAT 2: Semakan & Kelulusan Dekan / Ketua Jabatan`;
+                btnSubmit1.classList.add('hidden');
+                btnSubmit2.classList.remove('hidden');
+                checkDean.disabled = false;
+                checkCoordinator.disabled = true;
+            }
+        }
+
         function toggleNaState(checkbox, targetInputClass) {
             const card = checkbox.closest('.course-card');
             const targetInput = card.querySelector('.' + targetInputClass);
@@ -252,7 +346,6 @@
             calculateMetrics(card);
         }
 
-        // FUNGSI PENGIRAAN AUTOMATIK
         function calculateMetrics(card) {
             const totalStudentsInput = card.querySelector('.bilanganPelajar');
             const passedStudentsInput = card.querySelector('.bilanganLulus');
@@ -282,7 +375,6 @@
                 cloPassed = total;
             }
 
-            // Kemas kini Kadar Lulus
             if (naPass) {
                 passRateInput.value = "NA";
             } else if (total > 0) {
@@ -291,7 +383,6 @@
                 passRateInput.value = '';
             }
 
-            // Kemas kini Peratus CLO
             if (naClo) {
                 cloRateInput.value = "NA";
             } else if (total > 0) {
@@ -300,7 +391,6 @@
                 cloRateInput.value = '';
             }
 
-            // Kemas kini Pelajar Berisiko
             if (naRisk) {
                 atRiskInput.value = "NA";
             } else if (total > 0) {
@@ -325,6 +415,8 @@
             addCourseBlock('sem1Container', 'SEMESTER 1');
             addCourseBlock('sem2Container', 'SEMESTER 2');
             addCourseBlock('sem3Container', 'SEMESTER 3');
+
+            switchRole('COORDINATOR');
         });
 
         function addCourseBlock(containerId, semesterName) {
@@ -436,7 +528,7 @@
                 </div>
 
                 <div class="mt-3">
-                    <label class="block font-semibold text-slate-700 mb-1">Pautan Evidens / Evidence Link (Opsional/Optional)</label>
+                    <label class="block font-semibold text-slate-700 mb-1">Pautan Evidens / Evidence Link (Opsional)</label>
                     <input type="url" placeholder="HTTPS://..." class="pautanEvidens w-full bg-white border border-slate-300 rounded p-2 outline-none">
                 </div>
             `;
@@ -444,26 +536,34 @@
             container.appendChild(card);
         }
 
-        async function submitToSharePoint() {
-            const btn = document.getElementById('btnSubmit');
-            
-            const courseCards = document.querySelectorAll('.course-card');
-            let invalidDateFound = false;
-
-            courseCards.forEach(card => {
-                const targetDateVal = card.querySelector('.tarikhSasaran').value;
-                if (targetDateVal && targetDateVal < todayIsoString) {
-                    invalidDateFound = true;
-                }
-            });
-
-            if (invalidDateFound) {
-                alert('Ralat / Error: Tarikh Sasaran tidak boleh sebelum tarikh borang diisi hari ini! / Target date cannot be in the past!');
+        // PERINGKAT 1 SUBMISSION: Penyelaras Program
+        function handleFormSubmission() {
+            if (!document.getElementById('checkCoordinator').checked) {
+                alert('Sila tandakan kotak pengesahan Penyelaras Program terlebih dahulu!');
                 return;
             }
 
+            const coordName = document.getElementById('penyelarasProgram').value;
+            const tarikhHantar = document.getElementById('currentDateDisplay').innerText;
+            
+            document.getElementById('sigCoordName').innerText = coordName || '_______________________';
+            document.getElementById('sigCoordDate').innerText = tarikhHantar;
+
+            alert('Peringkat 1 Selesai! Borang bersedia untuk disemak dan diluluskan oleh Dekan / Ketua Jabatan.');
+            switchRole('DEAN');
+        }
+
+        // PERINGKAT 2 SUBMISSION: Dekan Approval & Hantar Ke SharePoint
+        async function submitFinalApproval() {
+            const checkDean = document.getElementById('checkDean');
+            if (!checkDean.checked) {
+                alert('Dekan / Ketua Jabatan perlu menandakan kotak kelulusan sebelum laporan ini disah dan dihantar ke SharePoint!');
+                return;
+            }
+
+            const btn = document.getElementById('btnSubmitStage2');
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghantar / Submitting...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menyimpan Kelulusan...`;
 
             const programKod = document.getElementById('programKod').value.toUpperCase();
             const namaProgram = document.getElementById('namaProgram').value.toUpperCase();
@@ -472,13 +572,14 @@
             const pelajarTahun = document.getElementById('pelajarTahun').value.toUpperCase();
             const tarikhHantar = document.getElementById('currentDateDisplay').innerText;
 
+            document.getElementById('sigDeanName').innerText = 'DEKAN / KETUA JABATAN';
+            document.getElementById('sigDeanDate').innerText = tarikhHantar;
+
+            const courseCards = document.querySelectorAll('.course-card');
             const coursesData = [];
 
             courseCards.forEach(card => {
                 const rawDate = card.querySelector('.tarikhSasaran').value;
-                const kod = card.querySelector('.kodKursus').value.toUpperCase();
-                const nama = card.querySelector('.namaKursus').value.toUpperCase();
-
                 const passVal = card.querySelector('.kadarLulus').value;
                 const cloVal = card.querySelector('.peratusCLO').value;
                 const riskVal = card.querySelector('.pelajarBerisiko').value;
@@ -490,8 +591,8 @@
                     "TAHUNAKADEMIK": tahunAkademik,
                     "PELAJARTAHUN": pelajarTahun,
                     "SEMESTER": card.dataset.semester,
-                    "KODKURSUS": kod,
-                    "NAMAKURSUS": nama,
+                    "KODKURSUS": card.querySelector('.kodKursus').value.toUpperCase(),
+                    "NAMAKURSUS": card.querySelector('.namaKursus').value.toUpperCase(),
                     "BILANGANPELAJAR": parseInt(card.querySelector('.bilanganPelajar').value) || 0,
                     "BILANGANLULUS": parseInt(card.querySelector('.bilanganLulus').value) || 0,
                     "BILANGANCLO": parseInt(card.querySelector('.bilanganCLO').value) || 0,
@@ -504,13 +605,13 @@
                     "TARIKHSASARAN": formatDateMY(rawDate),
                     "STATUSTINDAKAN": card.querySelector('.statusTindakan').value,
                     "PAUTANEVIDENS": card.querySelector('.pautanEvidens').value,
-                    "TARIKHHANTAR": tarikhHantar
+                    "TARIKHHANTAR": tarikhHantar,
+                    "STATUS_WORKFLOW": "APPROVED BY DEAN",
+                    "TARIKH_KELULUSAN_DEAN": tarikhHantar
                 });
             });
 
-            const payload = {
-                "COURSES": coursesData
-            };
+            const payload = { "COURSES": coursesData };
 
             try {
                 const response = await fetch(powerAutomateUrl, {
@@ -520,31 +621,17 @@
                 });
 
                 if (response.ok) {
-                    alert('Laporan program berjaya disimpan ke SharePoint Excel! / Program report successfully saved to SharePoint Excel!');
-
-                    document.getElementById('programCqiForm').reset();
-                    document.getElementById('sem1Container').innerHTML = '';
-                    document.getElementById('sem2Container').innerHTML = '';
-                    document.getElementById('sem3Container').innerHTML = '';
-
-                    addCourseBlock('sem1Container', 'SEMESTER 1');
-                    addCourseBlock('sem2Container', 'SEMESTER 2');
-                    addCourseBlock('sem3Container', 'SEMESTER 3');
-
-                    const today = new Date();
-                    const dd = String(today.getDate()).padStart(2, '0');
-                    const mm = String(today.getMonth() + 1).padStart(2, '0');
-                    const yyyy = today.getFullYear();
-                    document.getElementById('currentDateDisplay').innerText = `${dd}/${mm}/${yyyy}`;
+                    alert('Laporan CQI Program telah berjaya diluluskan oleh Dekan dan dihantar ke sistem SharePoint Excel!');
+                    location.reload();
                 } else {
-                    alert('Gagal menyimpan data ke SharePoint. / Failed to save data to SharePoint.');
+                    alert('Gagal menyimpan data ke SharePoint. Sila cuba lagi.');
                 }
             } catch (error) {
                 console.error(error);
-                alert('Ralat Rangkaian: Sila semak sambungan Internet. / Network Error: Please check your internet connection.');
+                alert('Ralat Rangkaian: Sila semak sambungan Internet.');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Hantar Ke SharePoint / Submit`;
+                btn.innerHTML = `<i class="fa-solid fa-circle-check"></i> Kelulusan Dekan & Hantar Ke SharePoint`;
             }
         }
 
@@ -553,7 +640,7 @@
         }
 
         function resetForm() {
-            if (confirm('Adakah anda pasti untuk mengosongkan semua isian? / Are you sure you want to reset all fields?')) {
+            if (confirm('Adakah anda pasti untuk mengosongkan semua isian borang?')) {
                 document.getElementById('programCqiForm').reset();
             }
         }
