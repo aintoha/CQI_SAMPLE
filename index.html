@@ -167,7 +167,7 @@
                                 <option value="TAHUN 2">TAHUN 2 / YEAR 2</option>
                                 <option value="TAHUN 3">TAHUN 3 / YEAR 3</option>
                                 <option value="TAHUN 4">TAHUN 4 / YEAR 4</option>
-                                <option value="TAHUN 5">TAHUN 5/ YEAR 5</option>
+                                <option value="TAHUN 5">TAHUN 5 / YEAR 5</option>
                                 <option value="TAHUN 6">TAHUN 6 / YEAR 6</option>
                             </select>
                         </div>
@@ -182,14 +182,14 @@
                                 <option value="FKJ">FAKULTI KEJURUTERAAN (FKJ)</option>
                                 <option value="FPKP">FAKULTI PERUBATAN & KESIHATAN PERTAHANAN (FPKP)</option>
                                 <option value="FSTP">FAKULTI SAINS & TEKNOLOGI PERTAHANAN (FSTP)</option>
-                                <option value="FPPM">FAKULTI PENGURUSAN & PENGAJIAN PERTAHANAN (FPPP)</option>
+                                <option value="FPPM">FAKULTI PENGURUSAN & PENGAJIAN PERTAHANAN (FPPM)</option>
                                 <option value="PB">PUSAT BAHASA (PB)</option>
                                 <option value="LAIN">LAIN-LAIN / OTHERS</option>
                             </select>
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Nama Dekan / Dean Name *</label>
-                            <input type="text" id="namaDekan" required placeholder="DR. SARAH BINTI ABDULLAH" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none uppercase">
+                            <input type="text" id="namaDekan" required placeholder="MASUKKAN NAMA DEKAN" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-brand-500 outline-none uppercase">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 uppercase mb-1">Emel Dekan / Dean Email Address *</label>
@@ -616,27 +616,86 @@
             handleIsuUtamaChange(isuArea);
         }
 
-        // PERINGKAT 1 SUBMISSION & JANA EMEL NOTIFIKASI KEPADA DEKAN
-        function handleFormSubmission() {
+        // PERINGKAT 1 SUBMISSION: HANTAR DATA KE POWER AUTOMATE + BUKA MAILTO
+        async function handleFormSubmission() {
             if (!document.getElementById('checkCoordinator').checked) {
                 alert('Sila tandakan kotak pengesahan Penyelaras Program terlebih dahulu!');
                 return;
             }
 
-            const coordName = document.getElementById('penyelarasProgram').value;
-            const programKod = document.getElementById('programKod').value;
-            const namaProgram = document.getElementById('namaProgram').value;
-            const deanName = document.getElementById('namaDekan').value;
-            const deanEmail = document.getElementById('emelDekan').value;
+            const btn = document.getElementById('btnSubmitStage1');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Menghantar Notifikasi...`;
+
+            const coordName = document.getElementById('penyelarasProgram').value.toUpperCase();
+            const programKod = document.getElementById('programKod').value.toUpperCase();
+            const namaProgram = document.getElementById('namaProgram').value.toUpperCase();
+            const deanName = document.getElementById('namaDekan').value.toUpperCase();
+            const deanEmail = document.getElementById('emelDekan').value.trim();
+            const tahunAkademik = document.getElementById('tahunAkademik').value.toUpperCase();
+            const pelajarTahun = document.getElementById('pelajarTahun').value.toUpperCase();
             const tarikhHantar = document.getElementById('currentDateDisplay').innerText;
-            
+
             document.getElementById('sigCoordName').innerText = coordName || '_______________________';
             document.getElementById('sigCoordDate').innerText = tarikhHantar;
 
-            // Jana Pautan Semakan Khas Dekan (?role=DEAN)
-            const deanReviewUrl = `${window.location.origin}${window.location.pathname}?role=DEAN&programCode=${encodeURIComponent(programKod)}`;
+            const courseCards = document.querySelectorAll('.course-card');
+            const coursesData = [];
 
-            // Draf Mesej Emel Kepada Dekan
+            courseCards.forEach(card => {
+                const rawDate = card.querySelector('.tarikhSasaran').value;
+                const passVal = card.querySelector('.kadarLulus').value;
+                const cloVal = card.querySelector('.peratusCLOInput').value;
+                const riskVal = card.querySelector('.pelajarBerisiko').value;
+                const isuTxt = card.querySelector('.isuUtama').value.trim();
+                const cqiTxt = card.querySelector('.tindakanCQI').value.trim();
+
+                coursesData.push({
+                    "PROGRAMKOD": programKod,
+                    "NAMAPROGRAM": namaProgram,
+                    "PENYELARASPROGRAM": coordName,
+                    "NAMADEAN": deanName,
+                    "EMELDEAN": deanEmail,
+                    "TAHUNAKADEMIK": tahunAkademik,
+                    "PELAJARTAHUN": pelajarTahun,
+                    "SEMESTER": card.dataset.semester,
+                    "KODKURSUS": card.querySelector('.kodKursus').value.toUpperCase(),
+                    "NAMAKURSUS": card.querySelector('.namaKursus').value.toUpperCase(),
+                    "BILANGANPELAJAR": parseInt(card.querySelector('.bilanganPelajar').value) || 0,
+                    "BILANGANLULUS": parseInt(card.querySelector('.bilanganLulus').value) || 0,
+                    "KADARLULUS": passVal === "NA" ? "NA" : (parseFloat(passVal) || 0),
+                    "PERATUSCLO": cloVal === "NA" ? "NA" : (parseFloat(cloVal) || 0),
+                    "PELAJARBERISIKO": riskVal === "NA" ? "NA" : (parseInt(riskVal) || 0),
+                    "ISUUTAMA": isuTxt === "" ? "TIADA" : isuTxt.toUpperCase(),
+                    "TINDAKANCQI": cqiTxt === "" ? "TIADA" : cqiTxt.toUpperCase(),
+                    "PIC": card.querySelector('.pic').value,
+                    "TARIKHSASARAN": formatDateMY(rawDate),
+                    "STATUSTINDAKAN": card.querySelector('.statusTindakan').value,
+                    "PAUTANEVIDENS": card.querySelector('.pautanEvidens').value,
+                    "TARIKHHANTAR": tarikhHantar,
+                    "STATUS_WORKFLOW": "PENDING DEAN APPROVAL",
+                    "TARIKH_KELULUSAN_DEAN": "PENDING"
+                });
+            });
+
+            const payload = { "COURSES": coursesData };
+
+            try {
+                // 1. Hantar data ke Power Automate supaya Power Automate boleh hantar emel latar belakang
+                await fetch(powerAutomateUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (err) {
+                console.warn("Power Automate background trigger status:", err);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Hantar Untuk Semakan Dekan (Stage 1)`;
+            }
+
+            // 2. Buka aplikasi emel peribadi secara automatik (Mailto link)
+            const deanReviewUrl = `${window.location.origin}${window.location.pathname}?role=DEAN&programCode=${encodeURIComponent(programKod)}`;
             const subject = encodeURIComponent(`[MEMERLUKAN KELULUSAN] Laporan CQI Program ${programKod} - ${namaProgram}`);
             const body = encodeURIComponent(
                 `Assalamualaikum / Salam Sejahtera YBhg. Prof./Dr. ${deanName},\n\n` +
@@ -647,15 +706,11 @@
                 `Daripada,\n${coordName}\nPenyelaras Program ${programKod}`
             );
 
-            const confirmEmail = confirm(
-                `Peringkat 1 Selesai!\n\n` +
-                `Adakah anda ingin membuka perisian e-mel automatik untuk menghantar notifikasi kelulusan terus kepada Dekan (${deanEmail})?`
-            );
-
-            if (confirmEmail) {
+            if (deanEmail) {
                 window.location.href = `mailto:${deanEmail}?subject=${subject}&body=${body}`;
             }
 
+            alert('Data Peringkat 1 telah berjaya dihantar! Mod borang kini ditukar ke Peringkat Kelulusan Dekan.');
             switchRole('DEAN');
         }
 
